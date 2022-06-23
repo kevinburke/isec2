@@ -60,6 +60,9 @@ func main() {
 
 We will try to return an answer within a maximum of 50 milliseconds.
 
+You may want to cache the answer as it is unlikely to change for the lifetime of
+a process.
+
 ## Correctness
 
 This library synthesizes [the advice from AWS][aws] and [the advice from
