@@ -19,7 +19,7 @@ var instanceRe = regexp.MustCompile(`^i-[0-9a-f]{8,20}$`)
 // occasionally overridden in tests
 var ec2APIHost = net.JoinHostPort("169.254.169.254", "80")
 
-var CouldNotDetermine = errors.New("usual methods of checking EC2 availability all failed")
+var ErrCouldNotDetermine = errors.New("usual methods of checking EC2 availability all failed")
 
 // IsEC2 reports whether you are running in EC2. We attempt to do this in
 // a timely manner, ie. we may set a shorter timeout than is provided.
@@ -53,7 +53,7 @@ func IsEC2(ctx context.Context) (bool, error) {
 		deadline, _ := ctx.Deadline()
 		f.SetDeadline(deadline)
 		var p [3]byte
-		if _, err := f.Read(p[:]); err == nil && string(p[:]) == "ec2" || string(p[:]) == "EC2" {
+		if _, err := f.Read(p[:]); err == nil && bytes.EqualFold(p[:], []byte("ec2")) {
 			f.Close()
 			return true, nil
 		}
@@ -65,7 +65,7 @@ func IsEC2(ctx context.Context) (bool, error) {
 		deadline, _ := ctx.Deadline()
 		f.SetDeadline(deadline)
 		var p [3]byte
-		if _, err := f.Read(p[:]); err == nil && string(p[:]) == "ec2" || string(p[:]) == "EC2" {
+		if _, err := f.Read(p[:]); err == nil && bytes.EqualFold(p[:], []byte("ec2")) {
 			f.Close()
 			return true, nil
 		}
@@ -77,15 +77,13 @@ func IsEC2(ctx context.Context) (bool, error) {
 	if err == nil {
 		return true, nil
 	}
-	if err != nil {
-		operr, ok := err.(*net.OpError)
-		if !ok {
-			return false, err
-		}
-		if operr.Timeout() {
-			// can't hit EC2 API
-			return false, nil
-		}
+	operr, ok := err.(*net.OpError)
+	if !ok {
+		return false, ErrCouldNotDetermine
 	}
-	return false, CouldNotDetermine
+	if operr.Timeout() {
+		// can't hit EC2 API
+		return false, nil
+	}
+	return false, ErrCouldNotDetermine
 }

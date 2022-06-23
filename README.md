@@ -1,7 +1,13 @@
-# isec2
+# is ec2
 
-This is a helper library to detect if you are running in EC2 or not. There are
-no dependencies.
+If you are running outside EC2 and don't have credentials, the AWS SDK will hang
+for 5+ seconds attempting to connect to the EC2 metadata API. That's annoying.
+
+This is a helper library to detect, quickly, if you are running in EC2 or not.
+If you are not, then you can avoid including the EC2 metadata API in your
+credential list.
+
+There are no dependencies.
 
 ## Usage
 
